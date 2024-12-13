@@ -1,13 +1,10 @@
-# Rules: if a field A is adjacent to X number of fields A, it adds total perimeter of:
-# X=0 - 4
-# X=1 - 3
-# X=2 - 2
-# X=3 - 1
-# X=4 -0
-# So we can count the neighbours, take the rule from above
-import symbol
+# TODO:
+# Check if can implement some walrus
+# Complexity: Time: goes through all fields, each field should be visited around 2: once for tagging and once after verifying if it was already tagged so 2*n^2 for square side n
+# I guess time can not go below that
+# Memory: Must build 2 tables, one for board and one for pointers. Build dict of shapes, but (I think) it should sub-linearly increase with n
 
-
+#Change the structure of the shapes dictionary. Should annotate somehow which field is surface and which perimeter. Enum...?
 #Rules while traversing:
 #If first field of type like that assign label (label might be current position of field)
 # If field has upper or left neighbour (traversing from top to bottom and left to right) take its label
@@ -16,10 +13,10 @@ import symbol
 # In fact all can be done with one traversal of the map. Complexity: 4*n^2 where n is the side of the whole square field
 
 def parse():
-    return open("input_small.txt").read().splitlines()
+    return open("input.txt").read().splitlines()
 
 def count_neighbours(row, column, board): #This is not pure function
-    """Checks for adjacency. Each adjacent tile removes one side from fence.
+    """Checks for adjacency. Each adjacent tile removes one side from tile's fence.
         0 neighbours = 4 fences. 4 neighbours = no fences."""
     fences = 4
     char = board[row][column]
@@ -37,68 +34,41 @@ def count_neighbours(row, column, board): #This is not pure function
             fences -= 1
     return fences
 
-def tag_neighbours(row, column, board, pointer_board, father): #rn this is not enough, tagging immediate neighbours is not enough.
-    # Look at the F fields in the medium example on the right, it is too far for the left elements to know they are in already existing grouo
-    # Maybe add some reconciliation? If 2 groups turn out to be one group...?
+def merge_neighbours(row, column, board, pointer_board, shapes, father) \
+        -> (list[tuple[int, int]], dict[tuple[int, int], list[int]]):
+    # Recursive function used for identifying one whole complete shape.
+    # Looks at the adjacent tiles in order to calculate the total area and perimeter
     char = board[row][column]
     pointer_board[row][column] = father
+    shapes[father][0] += count_neighbours(row, column, board)
+    shapes[father][1] += 1
     if row > 0:
-        if board[row - 1][column] == char:
-            pointer_board[row - 1][column] = father
+        if board[row - 1][column] == char and not pointer_board[row - 1][column]:
+            merge_neighbours(row - 1, column, board, pointer_board, shapes, father)
     if row < len(board) - 1:
-        if board[row + 1][column] == char:
-            pointer_board[row + 1][column] = father
+        if board[row + 1][column] == char and not pointer_board[row + 1][column]:
+            merge_neighbours(row + 1, column, board, pointer_board, shapes, father)
     if column > 0:
-        if board[row][column - 1] == char:
-            pointer_board[row][column - 1] = father
+        if board[row][column - 1] == char and not pointer_board[row][column - 1]:
+            merge_neighbours(row, column - 1, board, pointer_board, shapes, father)
     if column < len(board[0]) - 1:
-        if board[row][column + 1] == char:
-            pointer_board[row][column + 1] = father
-    return pointer_board
-
-def is_pioneer_tile(row, column, board, pointer_board) -> bool:
-    # Checks if the tile is first in the group
-    char = board[row][column]
-    if row > 0 and board[row - 1][column] == char and pointer_board[row - 1][column]:
-        return False
-    elif column > 0 and board[row][column - 1] == char and pointer_board[row][column - 1]:
-        return False
-    elif column < len(board[0]) - 1 and board[row][column + 1] == char and pointer_board[row][column + 1]:
-        return False
-    elif row < len(board) - 1 and board[row + 1][column] == char and pointer_board[row + 1][column]:
-        return False
-    return True
-
-def get_group(row, column, board, pointer_board):
-    # If a tile belongs to a group, returns group's key
-    char = board[row][column]
-    if row > 0 and board[row - 1][column] == char and pointer_board[row - 1][column]:
-        return pointer_board[row - 1][column]
-    if column > 0 and board[row][column - 1] == char and pointer_board[row][column - 1]:
-        return pointer_board[row][column - 1]
-    if column < len(board[0]) - 1 and board[row][column + 1] == char and pointer_board[row][column + 1]:
-        return pointer_board[row][column + 1]
-    if row < len(board) - 1 and board[row + 1][column] == char and pointer_board[row + 1][column]:
-        return pointer_board[row + 1][column]
-    return None
+        if board[row][column + 1] == char and not pointer_board[row][column + 1]:
+            merge_neighbours(row, column + 1, board, pointer_board, shapes, father)
+    return pointer_board, shapes
 
 def get_tile_map(board, pointer_board) -> dict[tuple[int], list[int]]:
     shapes = {} # Keys are gonna be tuples
     for row in range(len(board)):
         for col in range(len(board[0])):
             if not pointer_board[row][col]:
-                shapes[(row, col)] = [count_neighbours(row, col, board), 1]
-                pointer_board[row][col] = (row, col)
-                pointer_board = tag_neighbours(row, col, board, pointer_board, (row, col))
+                shapes[(row, col)] = [0, 0] #add new shape to the dictionary
+                pointer_board, shapes = merge_neighbours(row, col, board, pointer_board, shapes,(row, col))
             else:
-                continue #already marked
-                pointer_board = tag_neighbours(row, col, board, pointer_board, get_group(row, col, board, pointer_board)) #this field now points at its "father"
-                shapes[get_group(row, col, board, pointer_board)][0] += count_neighbours(row, col, board) # TODO: problem is in tagging itself
-                shapes[get_group(row, col, board, pointer_board)][1] += 1
+                continue # Part of already marked shape
     return shapes
 
 def get_total_cost(shapes):
-    acc = 0
+    acc = 0 #TODO: Candidate for walrus here?
     for cords in shapes:
         acc += shapes[cords][0] * shapes[cords][1]
     return acc
@@ -109,9 +79,8 @@ def solve_first(lines):
     # We store shapes in the dictionary where every key is the upper-most, and then left-most tile of the shape
     # that uniquely defines the whole shape. Each value is a list: [perimeter, surface].
     board = [[c for c in l] for l in lines]
-    pointer_board = [[None for _ in l ]for l in lines] # Each fields points to the its shape-definining tile position
+    pointer_board = [[None for _ in l ]for l in lines] # Each field points at its shape-defining tile position
     shapes = get_tile_map(board, pointer_board)
-    print(shapes)
     return get_total_cost(shapes)
 
 
