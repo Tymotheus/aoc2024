@@ -1,6 +1,3 @@
-from networkx.algorithms.approximation.clique import max_clique
-import networkx as nx
-
 def parse():
     return open("input.txt").read().splitlines()
 
