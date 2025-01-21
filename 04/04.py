@@ -1,3 +1,5 @@
+"""Tried to use pandas to learn a bit and leverage some slicing - turns out without it it might have even been faster."""
+
 import pandas as pd
 import numpy as np
 
