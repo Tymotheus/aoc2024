@@ -1,55 +1,70 @@
-from collections import deque
-# from treelib import Node, Tree
+"""Tried to use pandas to learn a bit and leverage some slicing - turns out without it it might have even been faster."""
+
+import pandas as pd
+import numpy as np
 
 
-def parse():
-    return open("input.txt").read().splitlines()
+def solve_first():
+    #Skipping parsing function to improve performance
+    acc=0
+    lines = open("input.txt").read().splitlines()
+    rules = []
+    i = iter(lines)
+    sentinel = object()
+    line = next(i)
+    while line != '':
+        rules.append((line.split("|")))
+        line = next(i)
+    while (l:=next(i, sentinel)) != sentinel: # testing this wild syntax
+        book = l.split(",")
+        correct = True
+        for rule in rules:
+            big_found = False
+            for page in book:
+                if page == rule[1]:
+                    big_found = True
+                if page == rule[0]: # We assume each page can appear only once in each book
+                    if big_found:
+                        correct = False
+        #Now all the rules are checked for this booked
+        if correct:
+            acc += int(book[len(book)//2])
+    return acc
 
-
-def solve_first(lines):
+def solve_second():
     acc = 0
-    rules = [[set()]]
-    print(rules)
-    for l in lines:
-        if l == '':
-            break
-        left, right = l.split('|')
-        left, right = int(left), int(right)
-        print(left,right)
-        lcords, rcords = None, None
-        for num, r in enumerate(rules): #we search through all the list of rules
-            for senum, se in enumerate(r): #we look at each set in the list of rules
-                if left in se:
-                    lcords = num, senum
-                if right in se:
-                    rcords = num, senum
-
-        if lcords is None and rcords is None:
-            rules.append([{left}, {right}])
-        elif lcords is None:
-            if rcords[1] == 0:
-                rules[rcords[0]] = [set().add(left), *rules[rcords[0]]] #we insert new set at the beginning
-            else:
-                rules[rcords[0]][rcords[1]-1].add(left) # we add left element immediately to the left of the right element
-        elif rcords is None:
-            if lcords[1] == len(rules[lcords[0]]): # we insert new set at the end
-                rules[lcords[0]] = [*rules[lcords[0]], set.add(right) ]
-            else:
-                rules[lcords[0]][lcords[1]+1].add(right) # we add right element immediately to the right of the left
-        else: # Both elements are present, need to merge 2 lists, for sure they should be 2 different lists (?)
-            pass
-    print(rules)
-
-
-    ordering = [{1,2}, {3,4}]
-    print(ordering)
+    lines = open("input.txt").read().splitlines()
+    rules = []
+    i = iter(lines)
+    sentinel = object()
+    line = next(i)
+    while line != '':
+        rules.append((line.split("|")))
+        line = next(i)
+    while (l := next(i, sentinel)) != sentinel:  # testing this wild syntax
+        book = l.split(",")
+        correct = True
+        position = None
+        rule_number = 0
+        while rule_number < len(rules):
+            rule = rules[rule_number]
+            big_found = False
+            for j, page in enumerate(book):
+                if page == rule[1]:
+                    big_found = True
+                    position = j
+                if page == rule[0]:  # We assume each page can appear only once in each book
+                    if big_found:
+                        correct = big_found = False
+                        book[position], book[j] = rule[0], rule[1] #Swap
+                        position = None
+                        rule_number = 0 # Recheck the rules
+            rule_number += 1
+        # Now all the rules are checked for this book
+        if not correct:
+            acc += int(book[len(book) // 2])
     return acc
 
 
-def solve_second(lines):
-    acc = 0
-    return acc
-
-
-print(solve_first(parse()))
-# print(solve_second(parse()))
+print(solve_first())
+print(solve_second())
