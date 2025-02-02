@@ -44,3 +44,26 @@ Szedłem od pola 8 w dół do 10
 Szedłem od pola 27 w górę do 21.
 Effectively to będzie taka jakby lista wektorów.
 Dobrze by było liczyć ile się robi kroków
+
+PROBLEM 2
+Między tobą a tym przedziałem, 
+który doprowadziłby do cyklu nie może być
+przeszkody. No i niestety znowu sprowadza się
+nam to do przeglądania wszystkich pól od ciebie
+do prawej... Chyba że albo mielibyśmy zapisane
+też pozycje wszystkich przeszkód.
+A oprócz tego można też to trochę usprawnić
+(Ale to na potem ew)
+że sprawdzasz tylko jak w tym słowniku na 
+odpowiedniej pozycji coś jest.
+Dla takiej rzadkiej macierzy (pustej planszy)
+to może mocno zredukować złożoność obliczeniową
+Więc wracajmy do czytania wszystkiego.
+Można by zacząć zaznaczać pola zamiast kreskami lub
+X-ami literkami.
+u - pole odwiedzane było idąc "upwards"
+d - odwiedzane downwords
+l - leftwords
+r - rightwords
+Pole może być też np (l,u) oznaczać to najlepiej przez
+sety myślę.
