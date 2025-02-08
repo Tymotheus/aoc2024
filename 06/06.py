@@ -2,10 +2,16 @@ from functools import reduce
 
 class Constants:
     directions = {
-        "^": (-1,0, ">"),
-        ">": (0,1, "v"),
-        "v": (1,0, "<"),
-        "<": (0,-1, "^"),
+        #Key: type of the cursor
+        #Values: (row increment, column increment, cursor after right turn, symbol left on the passed field
+        # u - moved here going upwards
+        # r - rightwards
+        # d - downwards
+        # l - leftwards
+        "^": (-1,0, ">", "u"),
+        ">": (0,1, "v", "r"),
+        "v": (1,0, "<", "d"),
+        "<": (0,-1, "^", "l"),
     }
     OBSTACLE = '#'
 
@@ -55,17 +61,22 @@ def check_for_border(board, pos_r, pos_c):
         end = False
     pass
 
-def move_forward():
+def move_forward(board, pos_r, pos_c, nex_r, nex_c):
     # Remember to overwrite new field and clean the one that you have just been to
-    pass
+    cursor = board[pos_r][pos_c]
+    board[nex_r][nex_c] = cursor
+    board[pos_r][pos_c] = Constants.directions[cursor][3]
+    return board
 
 def get_next_position(board, pos_r: int, pos_c: int) -> tuple[int, int]:
+    print(pos_r, pos_c)
     cursor = board[pos_r][pos_c]
+    print(cursor)
     nex_r, nex_c = pos_r + Constants.directions[cursor][0], pos_c + Constants.directions[cursor][1]
     return nex_r, nex_c
 
 
-def make_move(board, pos_r: int = None, pos_c: int = None):
+def make_move(board, pos_r: int = None, pos_c: int = None) -> tuple[list, int, int]:
     """
     1. Get or detect where is the current position
     2. Check for cycle, if so, increment accumulator
@@ -73,7 +84,7 @@ def make_move(board, pos_r: int = None, pos_c: int = None):
     :param board:
     :param pos_r:
     :param pos_c:
-    :return:
+    :return: return final position of the cursor
     """
     # The position was not passed with the arguments, we need to find it
     if None in (pos_r, pos_c):
@@ -81,10 +92,13 @@ def make_move(board, pos_r: int = None, pos_c: int = None):
     check_for_cycle(board, pos_r, pos_c)
     nex_r, nex_c = get_next_position(board, pos_r, pos_c)
     if board[nex_r][nex_c] == Constants.OBSTACLE:
-        turn_right()
+        board = turn_right(board, pos_r, pos_c)
+        return board, pos_r, pos_c
     else:
         check_for_border(board, pos_r, pos_c)
-        move_forward()
+        board = move_forward(board, pos_r, pos_c, nex_r, nex_c)
+        return board, nex_r, nex_c
+
 
 
 
@@ -122,22 +136,25 @@ def solve_first(lines):
     return acc+1 #one accounting for field just before exiting the map
 
 
-def solve_second(lines):
+def solve_second(lines, interactive = False):
     #global board # Should it be global?
     board = [[field for field in l] for l in lines]
     acc = 0
     end = False
     iteration = 0
+    pos_r = pos_c = None
     while not end:
         iteration += 1
-        print_board(board)
-        input("Press Enter to continue...") # Make the simulation interactive
-        make_move(board)
-        end = True
+        if interactive:
+            print_board(board)
+            input("Press Enter to continue...") # Make the simulation interactive
+        board, pos_r, pos_c = make_move(board, pos_r, pos_c)
+        if iteration > 100:
+            end = True
     # Print the final map
     print_board(board, pretty=True)
     return acc
 
 
 # print(solve_first(parse()))
-print(solve_second(parse()))
+print(solve_second(parse(), interactive = True))

@@ -67,3 +67,5 @@ l - leftwords
 r - rightwords
 Pole może być też np (l,u) oznaczać to najlepiej przez
 sety myślę.
+
+# Cykl numer 3 jest ciężki do uzyskania
