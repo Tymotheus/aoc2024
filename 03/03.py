@@ -1,8 +1,7 @@
 import re
 
 pattern = r"mul\((\d{1,3}),(\d{1,3})\)"
-pattern2  = r"mul\((\d{1,3}),(\d{1,3})\)|\b(do|don't)\(\)"
-
+pattern2 = r"mul\((\d{1,3}),(\d{1,3})\)|\b(do|don't)\(\)"
 
 
 def parse():
@@ -13,9 +12,9 @@ def solve_first(lines):
     matches = re.findall(pattern, lines)
 
     print(matches)  # Output: [('123', '45'), ('9', '876')]
-    sum=0
-    for x,y in matches:
-        sum+=int(x)*int(y)
+    sum = 0
+    for x, y in matches:
+        sum += int(x) * int(y)
     return sum
 
 
