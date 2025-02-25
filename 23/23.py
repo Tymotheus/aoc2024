@@ -1,8 +1,10 @@
 from networkx.algorithms.approximation.clique import max_clique
 import networkx as nx
 
+
 def parse():
     return open("input.txt").read().splitlines()
+
 
 def solve_first(lines):
     acc = 0
@@ -19,13 +21,13 @@ def solve_first(lines):
             parties[comps[1]] = {comps[0]}
     solution = []
     for k, v in parties.items():
-        if k[0] == 't':
+        if k[0] == "t":
             for i, node1 in enumerate(v):
                 for node2 in v:
                     if node2 in parties[node1]:
                         if {k, node1, node2} not in solution:
                             solution.append({k, node1, node2})
-                            acc+=1
+                            acc += 1
     return acc
 
 
@@ -38,10 +40,10 @@ def solve_second(lines):
     max_len = 0
     max_clique = None
     for i in output:
-        if len(i)>max_len:
+        if len(i) > max_len:
             max_clique = i
             max_len = len(i)
-    print(','.join(sorted(max_clique)))
+    print(",".join(sorted(max_clique)))
     return acc
 
 
