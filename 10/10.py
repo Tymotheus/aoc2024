@@ -16,8 +16,6 @@ def follow_trail(cord_x, cord_y, board, previous_height, trs, p_1):
     elif board[cord_x][cord_y] == "9":
         if (cord_x, cord_y) in trs and p_1:
             return trs
-            # print(trs)
-            # print(f"Found the end of a trail! x {cord_x} y {cord_y}")
         trs.append((cord_x, cord_y))
         return trs
     for i in (-1, 1):
