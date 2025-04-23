@@ -4,6 +4,7 @@ Running cProfiler indicates that insert and pop operations take a lot of time
 (makes sense, they require full list recopying)
 Implemented a linked list, reduced the timing to <0.5s.
 This solution goes instantly for n=25 and very first for n<30.
+Using profiler, for linked lists and no caching, on my macbook the job for 30 epochs and final data runs for 3.4 seconds.
 It is however too slow for n = 75.
 
 Attempt number 2 is to instead reduce the length of the list.
@@ -13,4 +14,4 @@ Caching might be used, especially that numerous times it will happen that we wil
 with their deterministic path forward.
 There are also a lot of elements 2,4,6,8.
 
-Using profiler, for linked lists and no caching, on my macbook the job for 30 epochs and final data runs for 3.4 seconds.
+After implementing recursion and caching, for 75 epochs, execution time < 0.1s.

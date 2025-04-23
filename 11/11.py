@@ -1,86 +1,46 @@
-from collections import deque
+from functools import cache
+from math import log10
 import cProfile
-
-
-class Node:
-    def __init__(self, data):
-        self.data = data
-        self.next = None
-
-    def __repr__(self):
-        return self.data
-
-
-class LinkedList:
-    def __init__(self, nodes=None):
-        self.head = None
-        if nodes is not None:
-            node = Node(data=nodes.pop(0))
-            self.head = node
-            for elem in nodes:
-                node.next = Node(data=elem)
-                node = node.next
-
-    def __repr__(self):
-        node = self.head
-        nodes = []
-        while node is not None:
-            nodes.append(node.data)
-            node = node.next
-        nodes.append("None")
-        return " -> ".join(nodes)
-
-    def __iter__(self):
-        node = self.head
-        while node is not None:
-            yield node
-            node = node.next
 
 
 def parse():
     return open("input.txt").read().split()
 
 
-def transform_stone(i: int, stones: list):
-    stone = stones[i]
-    if stone == "0":
-        stones[i] = "1"
-    elif len(stone) % 2 == 0:
-        stones.pop(i)
-        stones.insert(i, stone[: int(len(stone) / 2)])
-        stones.insert(i + 1, stone[int(len(stone) / 2) :])
+@cache
+def get_num_digits(n: int):
+    if n > 0:
+        return int(log10(n)) + 1
+    elif n == 0:
+        return 1
     else:
-        stones[i] = str(int(stone) * 2024)
-    return stones
+        return None
 
 
-def transform_stone_ll(stone,iterator):
-    if stone.data == "0":
-        stone.data = "1"
-    elif len(stone.data) % 2 == 0:
-        s_r = Node(stone.data[int(len(stone.data) / 2) :].lstrip("0"))
-        s_r.next = stone.next
-        if s_r.data == "":
-            s_r.data = "0"
-        stone.data = stone.data[: int(len(stone.data) / 2)].lstrip("0")
-        stone.next = s_r
-        next(iterator) # Yield one more argument, to account for just added Node
+@cache
+def compute_length_for_element(n: int, epochs: int):
+    """Takes a value and number of epochs. Returns number of elements for a list after number of epochs."""
+    if epochs == 0:
+        return 1
+    if n == 0:
+        return compute_length_for_element(1, epochs - 1)
+    elif get_num_digits(n) % 2 == 0:
+        left_el = n // (10 ** int(get_num_digits(n) / 2))
+        right_el = n % (10 ** int(get_num_digits(n) / 2))
+        return compute_length_for_element(
+            left_el, epochs - 1
+        ) + compute_length_for_element(right_el, epochs - 1)
     else:
-        stone.data = str(int(stone.data)*2024)
+        return compute_length_for_element(n * 2024, epochs - 1)
 
 
-def solve(stones, epochs:int):
+def solve(stones, epochs: int):
     acc = 0
-    stones = LinkedList(stones)
-    for blink in range(epochs):
-        iterator = iter(stones)
-        for stone in iterator:
-            transform_stone_ll(stone, iterator)
-    for _ in stones: acc+=1
+    for stone in stones:
+        acc += compute_length_for_element(int(stone), epochs)
     return acc
 
 
-
-print(solve(parse(),epochs=25))
-# print(solve(parse(),epochs=30))
-# print(cProfile.run('solve(parse(),25)'))
+print(solve(parse(), epochs=25))
+print(solve(parse(), epochs=75))
+# print(cProfile.run('solve(parse(),75)'))
