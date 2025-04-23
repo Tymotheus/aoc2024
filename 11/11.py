@@ -38,7 +38,7 @@ class LinkedList:
 
 
 def parse():
-    return open("input_small.txt").read().split()
+    return open("input.txt").read().split()
 
 
 def transform_stone(i: int, stones: list):
@@ -54,29 +54,33 @@ def transform_stone(i: int, stones: list):
     return stones
 
 
-def transform_stone_ll(i: int, stones: list):
-    pass
+def transform_stone_ll(stone,iterator):
+    if stone.data == "0":
+        stone.data = "1"
+    elif len(stone.data) % 2 == 0:
+        s_r = Node(stone.data[int(len(stone.data) / 2) :].lstrip("0"))
+        s_r.next = stone.next
+        if s_r.data == "":
+            s_r.data = "0"
+        stone.data = stone.data[: int(len(stone.data) / 2)].lstrip("0")
+        stone.next = s_r
+        next(iterator) # Yield one more argument, to account for just added Node
+    else:
+        stone.data = str(int(stone.data)*2024)
 
 
-def solve_first(stones):
+def solve(stones, epochs:int):
     acc = 0
-    for blink in range(25):
-        for i, stone in enumerate(stones):
-            stones = transform_stone(i, stones)
-        print(blink)
-    print(len(stones))
+    stones = LinkedList(stones)
+    for blink in range(epochs):
+        iterator = iter(stones)
+        for stone in iterator:
+            transform_stone_ll(stone, iterator)
+    for _ in stones: acc+=1
     return acc
 
 
-def solve_second(stones):
-    acc = 0
-    return acc
 
-
-# print(cProfile.run('solve_first(parse())'))
-# print(solve_second(parse()))
-first_node = Node("a")
-llist = LinkedList(["a", "b", "c"])
-print(llist)
-for i in llist:
-    print(i)
+print(solve(parse(),epochs=25))
+# print(solve(parse(),epochs=30))
+# print(cProfile.run('solve(parse(),25)'))
