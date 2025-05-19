@@ -1,5 +1,5 @@
-import os
 import re
+import numpy as np
 
 
 def extract_numbers(line):
@@ -14,32 +14,32 @@ def extract_numbers(line):
     else:
         return None
 
-def parse():
-    lines = open("input_small.txt").read().splitlines()
-    tab = []
-    for indx in range(0, len(lines), 4):
-        tab.append(parse_one_machine(lines[indx:indx+4]))
-    return(tab)
+def solve_one_machine(lines, is_part_two=False):
+    # Returns solution for linear equation given by specification of buttons
+    a_x, a_y = extract_numbers(lines[0])
+    b_x, b_y = extract_numbers(lines[1])
+    p_x, p_y = extract_numbers(lines[2])
+    coefficients = np.array([[a_x, b_x], [a_y, b_y]], dtype=np.int64) # Units of move for one push of button
+    constants = np.array([p_x, p_y], dtype=np.int64) # Desired position for claw location
+    if is_part_two:
+        constants+= 10**13
+    return np.linalg.solve(coefficients, constants)
 
-def parse_one_machine(lines):
-    x = []
-    for l in lines[:3]:
-        x+=extract_numbers(l)
-    return x
+def solve_first():
+    lines = open("input.txt").read().splitlines()
+    tokens_one = 0
+    tokens_two = 0
+    for i in range(0, len(lines), 4): #We grab group of lines for every machine, including trailing newline
+        solution_one = solve_one_machine(lines[i:i+3])
+        if np.allclose(solution_one, np.round(solution_one)): # There is a solution for whole number of pushes
+            tokens_one += 3*solution_one[0] + solution_one[1] # Adding cost in tokens of pushing each button
+        solution_two = solve_one_machine(lines[i:i+3], True)
+        # for i in solution_two:
+        #     print("{:.8f}".format(i))
+        if np.allclose(solution_two, np.round(solution_two),rtol=1e-14,atol=1e-08):
+            tokens_two += 3*solution_two[0] + solution_two[1]
+    print(f"Tokens for part one: {tokens_one}")
+    print(f"Tokens for part two: {tokens_two}")
 
 
-def solve_first(machines):
-    # Shape is a collection of tiles
-    # We store shapes in the dictionary where every key is the upper-most, and then left-most tile of the shape
-    # that uniquely defines the whole shape. Each value is a list: [perimeter, surface].
-    for i in machines: print(i)
-
-
-def solve_second(lines):
-    print(lines)
-
-
-
-
-print(solve_first(parse()))
-# print(solve_second(parse()))
+solve_first()
