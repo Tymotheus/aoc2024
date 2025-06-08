@@ -22,9 +22,10 @@ def print_board(robots,s):
         board[r[1]][r[0]]= "*"
     for i in range(len(board)):
         board[i] = "".join(board[i])
-        board[i]+="\n"
-    print(board)
-    open(f"{s}.txt","w").writelines(board)
+        board[i]+="X" #"\n"
+    for l in board:
+        print(l)
+    # open(f"{s}.txt","w").writelines(board)
 
 
 def write_board(robots):
@@ -47,12 +48,20 @@ def solve_first(lines):
     robots = list()
     for l in lines:
         robots.append(extract_numbers(l))
-    seconds =2000
+    seconds = 10000
     print(robots[0])
     for s in range(seconds):
         make_move(robots)
-        print_board(robots,s)
+        if s % 101 == 3:
+            print(s)
+            print_board(robots,s)
+            print()
+            input()
     return get_safety_factor(robots)
 
 
 print(solve_first(parse()))
+
+
+2528
+2629
