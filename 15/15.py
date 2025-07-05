@@ -12,9 +12,21 @@ class Constants:
     OBSTACLE = '#'
     ROBOT = '@'
     BOX = 'O'
+    SPACE = '.'
 
 def parse():
-    return open("input_small.txt").read().splitlines()
+    lines = open("input.txt").read().splitlines()
+    board = list()
+    instructions = list()
+    for l in lines:
+        if l == "":
+            break
+        else:
+            board.append([field for field in l])
+    for l in lines[len(board) + 1:]:
+        instructions.append(l)
+    instructions = reduce(lambda x, y: x + y, instructions)  # make instructions a single string
+    return board, instructions
 
 def print_board(board, pretty=False):
     if pretty:
@@ -23,6 +35,7 @@ def print_board(board, pretty=False):
     else:
         for line in board:
             print(line)
+    print()
 
 def find_cursor(board):
     pos_r = pos_c = None
@@ -33,17 +46,6 @@ def find_cursor(board):
     return pos_r, pos_c
 
 
-
-def check_for_moving_box():
-    """
-    Check if the box can be moved, if it can be moved, move it.
-    If it cannot be moved, do not do anything.
-    """
-    # This is a placeholder for the logic that checks if the box can be moved
-    # and moves it if possible. The actual implementation will depend on the
-    # specific rules of the game or simulation.
-    pass
-
 def move_forward(board, pos_r, pos_c, nex_r, nex_c):
     # move all the boxes if applicable:
     # ......
@@ -52,82 +54,76 @@ def move_forward(board, pos_r, pos_c, nex_r, nex_c):
     board[pos_r][pos_c] = '.'
     return board
 
+
 def get_next_position(instruction, pos_r: int, pos_c: int) -> tuple[int, int]:
     nex_r, nex_c = pos_r + Constants.directions[instruction][0], pos_c + Constants.directions[instruction][1]
     return nex_r, nex_c
 
+def attempt_push(board, instruction, pos_r, pos_c, nex_r, nex_c):
+    # If there is a box we need to check if we can move it
+    front_box_r, front_box_c = nex_r, nex_c
+    stopping = False
+    while not stopping:
+        nex_r, nex_c = get_next_position(instruction, nex_r, nex_c)
+        if board[nex_r][nex_c] == Constants.OBSTACLE:
+            stopping = True
+        elif board[nex_r][nex_c] == Constants.SPACE:
+            board[nex_r][nex_c] = Constants.BOX
+            move_forward(board, pos_r, pos_c, front_box_r, front_box_c)
+            pos_r, pos_c = front_box_r, front_box_c
+            stopping = True
+        elif board[nex_r][nex_c] == Constants.BOX:
+            continue
+        else:
+            raise Exception("Field on the board undefined")
+    return board, pos_r, pos_c
 
-def make_move(board, instruction, pos_r: int = None, pos_c: int = None) -> tuple[list, int, int]:
+def make_move(board: list[list], instruction: str, pos_r: int = None, pos_c: int = None) -> tuple[list[list], int, int]:
     """
     1. Get or detect where is the current position
-    3. Check if there is obstacle or move forward
+    2. Check what is the next field for robot based on instruction
+    3. Perform a proper move accordingly
     :param board:
     :param instruction: the instruction to be executed
     :param pos_r:
     :param pos_c:
-    :return: return final position of the cursor
+    :return: return the board and position r and c after moving
     """
-    # The position was not passed with the arguments, we need to find it
     if None in (pos_r, pos_c):
         pos_r, pos_c = find_cursor(board)
     nex_r, nex_c = get_next_position(instruction, pos_r, pos_c)
-    if board[nex_r][nex_c] == Constants.OBSTACLE:
-        pass # Do not move, wait for the next instruction
-    if board[nex_r][nex_c] == Constants.BOX:
-        # If there is a box we need to check if we can move it
-        check_for_moving_box()
-    else:
+    if board[nex_r][nex_c] == Constants.SPACE:
         board = move_forward(board, pos_r, pos_c, nex_r, nex_c)
-        return board, nex_r, nex_c
+        pos_r, pos_c = nex_r, nex_c
+    elif board[nex_r][nex_c] == Constants.OBSTACLE:
+        pass # Do not move, wait for the next instruction
+    elif board[nex_r][nex_c] == Constants.BOX:
+        # If there is a box we need to check if we can move it
+        board, pos_r, pos_c = attempt_push(board, instruction, pos_r, pos_c, nex_r, nex_c)
+    else:
+        raise Exception("Field on the board undefined")
+    return board, pos_r, pos_c
 
+def get_gps_sum(board):
+    gps_sum = 0
+    for r, l in enumerate(board):
+        for c, field in enumerate(l):
+            if field == Constants.BOX:
+               gps_sum += 100 * r + c
+    return gps_sum
 
-def solve_first(lines):
-    board = list()
-    instructions = list()
-    for l in lines:
-        if l == "": break
-        else:
-            board.append([field for field in l])
-    for l in lines[len(board)+1:]:
-        instructions.append(l)
-    instructions = reduce(lambda x, y: x + y, instructions) #make instructions a single string
-    print(board)
-    print(instructions)
-    acc = 0
-    end = False
+def solve_first():
+    board, instructions = parse()
     iteration = 1
-    print_board(board)
-    print(find_cursor(board))
+    pos_r = pos_c = None
+    # print_board(board)
     for i in instructions:
-        make_move(board, i)
-        pass
-    # while not end:
-    #     # The input guarantees that the loop will eventually stop
-    #     iteration+=1
-    #     # print("\n\n")
-    #     # print(iteration)
-    #     for i, line in enumerate(board):
-    #         # print(line)
-    #
-    #         for j, field in enumerate(line):
-    #             if field in Constants.directions.keys():
-    #                 next_position = (i + Constants.directions[field][0], j + Constants.directions[field][1])
-    #                 if 0 <= next_position[0] < len(board) and 0 <= next_position[1] < len(board[0]):
-    #                     # not leaving the map
-    #                     if board[next_position[0]][next_position[1]] == '#':
-    #                         board[i][j] = Constants.directions[field][2]
-    #                         continue
-    #                     else:
-    #                         board[i][j] = 'X'
-    #                         board[next_position[0]][next_position[1]] = field
-    #                 else: # leaving the board
-    #                     end = True
-    # # Print the final map
-    # for i, line in enumerate(board):
-    #     print(line)
-    #     for j, field in enumerate(line):
-    #         if field == 'X': acc+=1
-    return acc+1 #one accounting for field just before exiting the map
+        # print(iteration)
+        board, pos_r, pos_c = make_move(board, i, pos_r, pos_c)
+        # print_board(board)
+        iteration += 1
+    return get_gps_sum(board)
+
 
 
 def solve_second(lines, interactive = False):
@@ -135,5 +131,5 @@ def solve_second(lines, interactive = False):
     return acc
 
 
-print(solve_first(parse()))
+print(solve_first())
 # print(solve_second(parse(), interactive = True))
