@@ -131,5 +131,6 @@ def solve_second(lines, interactive = False):
     return acc
 
 
+
 print(solve_first())
 # print(solve_second(parse(), interactive = True))
